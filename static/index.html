@@ -1364,7 +1364,16 @@
             <div id="batchLogin" class="tab-content hidden">
                 <div class="batch-header">
                     <h3>批量验证账户</h3>
-                    <p class="batch-description">每行一个账户，格式：邮箱----密码----刷新令牌----客户端ID</p>
+                    <div class="format-toggle">
+                        <label>
+                            <input type="radio" id="refreshFirst" name="accountFormat" checked /> 
+                            <p class="batch-description">刷新令牌在前 (邮箱----密码----刷新令牌----客户端ID)</p>
+                        </label>
+                        <label>
+                            <input type="radio" id="clientFirst" name="accountFormat" /> 
+                            <p class="batch-description">客户端ID在前 (邮箱----密码----客户端ID----刷新令牌)</p>
+                        </label>
+                    </div>
                 </div>
                 <div class="input-group">
                     <textarea id="batchAccounts" rows="8" placeholder="example@outlook.com----password----refresh_token----client_id"></textarea>
@@ -1701,6 +1710,8 @@
             const lines = batchText.split('\n').filter(line => line.trim());
             const resultList = document.getElementById('verificationResultList');
             resultList.innerHTML = '<div class="verification-loading"><div class="spinner"></div><p>正在验证账户，请稍候...</p></div>';
+            // 获取当前选中的输入格式
+            const refreshFirst = document.getElementById('refreshFirst').checked;
             
             // 准备批量验证的账户列表
             const accounts = [];
@@ -1708,7 +1719,13 @@
                 const parts = line.split('----').map(p => p.trim());
                 if (parts.length !== 4) continue;
                 
-                const [email, _, refreshToken, clientId] = parts;
+                let email, refreshToken, clientId;
+
+                if (refreshFirst) {
+                    [email, _, refreshToken, clientId] = parts;
+                } else {
+                    [email, _, clientId, refreshToken] = parts;
+                }
                 accounts.push({
                     email,
                     refresh_token: refreshToken,
